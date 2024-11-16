@@ -24,7 +24,7 @@ While there are multiple ways to solve this problem, I chose the **Spring Boot R
 1. Clone this repository:
    ```bash
    git clone <repository_url>
-   cd spacex-application
+   cd spacex
    ```
 2. Build the project using Maven:
    ```bash
