@@ -1,0 +1,6 @@
+spring:
+    application:
+        name: spacex
+    profiles:
+        active: prod
+    port: 8080
