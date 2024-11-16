@@ -31,19 +31,8 @@ class TaskServiceTest {
 
     @Test
     void testRocketLaunchedByYear() {
-
-        System.out.println(Instant.now().atZone(ZoneId.of("UTC")).getYear());
-
-        Launch launch = Launch.builder()
-                .date(Instant.now())
-                .launchPadId("pad1")
-                .rocketId("rocket1")
-                .build();
-
-        Rocket rocket = Rocket.builder()
-                .rocketId("rocket1")
-                .rocketName("falcon")
-                .build();
+        Launch launch = getLaunch(Instant.now(), "pad1", "rocket1");
+        Rocket rocket = getRocket("rocket1", "Falcon");
 
         given(spacexClientService.getAllLaunches()).willReturn(Flux.just(launch));
         given(spacexClientService.getRocketById(launch.getRocketId())).willReturn(Mono.just(rocket));
@@ -51,7 +40,7 @@ class TaskServiceTest {
         Map<Integer, Long> yearCount = new HashMap<>();
         yearCount.put(2024, 1L);
         Map<String, Map<Integer, Long>> expected = new HashMap<>();
-        expected.put("falcon", yearCount);
+        expected.put("Falcon", yearCount);
 
         StepVerifier.create(taskService.getRocketsLaunchedByYear())
                 .assertNext(output -> {
@@ -65,18 +54,8 @@ class TaskServiceTest {
 
     @Test
     void testRocketLaunchedByYearNullRocketName() {
-
-        System.out.println(Instant.now().atZone(ZoneId.of("UTC")).getYear());
-
-        Launch launch = Launch.builder()
-                .date(Instant.now())
-                .launchPadId("pad1")
-                .rocketId("rocket1")
-                .build();
-
-        Rocket rocket = Rocket.builder()
-                .rocketId("rocket1")
-                .build();
+        Launch launch = getLaunch(Instant.now(), "pad1", "rocket1");
+        Rocket rocket = getRocket("rocket1", null);
 
         given(spacexClientService.getAllLaunches()).willReturn(Flux.just(launch));
         given(spacexClientService.getRocketById(launch.getRocketId())).willReturn(Mono.just(rocket));
@@ -99,33 +78,12 @@ class TaskServiceTest {
 
     @Test
     void testRocketLaunchedByYearMultipleResults() {
+        Launch launch1 = getLaunch(Instant.now(), "pad1", "rocket1");
+        Launch launch2 = getLaunch(Instant.parse("2023-01-21T05:47:26.853Z"), "pad2", "rocket2");
+        Launch launch3 = getLaunch(Instant.parse("2022-01-21T05:47:26.853Z"), "pad2", "rocket2");
 
-        Launch launch1 = Launch.builder()
-                .date(Instant.now())
-                .launchPadId("pad1")
-                .rocketId("rocket1")
-                .build();
-
-        Launch launch2 = Launch.builder()
-                .date(Instant.parse("2023-01-21T05:47:26.853Z"))
-                .launchPadId("pad2")
-                .rocketId("rocket2")
-                .build();
-
-        Launch launch3 = Launch.builder()
-                .date(Instant.parse("2022-01-21T05:47:26.853Z"))
-                .launchPadId("pad2")
-                .rocketId("rocket2")
-                .build();
-
-        Rocket rocket1 = Rocket.builder()
-                .rocketId("rocket1")
-                .rocketName("Falcon")
-                .build();
-        Rocket rocket2 = Rocket.builder()
-                .rocketId("rocket2")
-                .rocketName("Apollo")
-                .build();
+        Rocket rocket1 = getRocket("rocket1", "Falcon");
+        Rocket rocket2 = getRocket("rocket2", "Apollo");
 
         given(spacexClientService.getAllLaunches()).willReturn(Flux.just(launch1,launch2,launch3));
         given(spacexClientService.getRocketById("rocket1")).willReturn(Mono.just(rocket1));
@@ -153,24 +111,9 @@ class TaskServiceTest {
 
     @Test
     void testRocketLaunchedPerSite() {
-
-        System.out.println(Instant.now().atZone(ZoneId.of("UTC")).getYear());
-
-        Launch launch = Launch.builder()
-                .date(Instant.now())
-                .launchPadId("pad1")
-                .rocketId("rocket1")
-                .build();
-
-        LaunchPad launchPad = LaunchPad.builder()
-                .launchPadName("Site 1")
-                .launchPadId("pad1")
-                .build();
-
-        Rocket rocket = Rocket.builder()
-                .rocketId("rocket1")
-                .rocketName("falcon")
-                .build();
+        Launch launch = getLaunch(Instant.now(), "pad1", "rocket1");
+        Rocket rocket = getRocket("rocket1", "Falcon");
+        LaunchPad launchPad = getLaunchPad("pad1", "Site 1");
 
         given(spacexClientService.getAllLaunches()).willReturn(Flux.just(launch));
         given(spacexClientService.getLaunchPadById(launch.getLaunchPadId())).willReturn(Mono.just(launchPad));
@@ -179,7 +122,7 @@ class TaskServiceTest {
         Map<String, Long> siteCount = new HashMap<>();
         siteCount.put("Site 1", 1L);
         Map<String, Map<String, Long>> expected = new HashMap<>();
-        expected.put("falcon", siteCount);
+        expected.put("Falcon", siteCount);
 
         StepVerifier.create(taskService.getLaunchesPerSite())
                 .assertNext(output -> {
@@ -193,22 +136,9 @@ class TaskServiceTest {
 
     @Test
     void testRocketLaunchedPerSiteNullRocketAndLaunchPadName() {
-
-        System.out.println(Instant.now().atZone(ZoneId.of("UTC")).getYear());
-
-        Launch launch = Launch.builder()
-                .date(Instant.now())
-                .launchPadId("pad1")
-                .rocketId("rocket1")
-                .build();
-
-        LaunchPad launchPad = LaunchPad.builder()
-                .launchPadId("pad1")
-                .build();
-
-        Rocket rocket = Rocket.builder()
-                .rocketId("rocket1")
-                .build();
+        Launch launch = getLaunch(Instant.now(), "pad1", "rocket1");
+        Rocket rocket = getRocket("rocket1", null);
+        LaunchPad launchPad = getLaunchPad("pad1", null);
 
         given(spacexClientService.getAllLaunches()).willReturn(Flux.just(launch));
         given(spacexClientService.getLaunchPadById(launch.getLaunchPadId())).willReturn(Mono.just(launchPad));
@@ -231,44 +161,15 @@ class TaskServiceTest {
 
     @Test
     void testRocketLaunchedPerSiteMultipleResult() {
+        Launch launch1 = getLaunch(Instant.now(), "pad1", "rocket1");
+        Launch launch2 = getLaunch(Instant.parse("2023-01-21T05:47:26.853Z"), "pad2", "rocket2");
+        Launch launch3 = getLaunch(Instant.parse("2022-01-21T05:47:26.853Z"), "pad2", "rocket2");
 
-        System.out.println(Instant.now().atZone(ZoneId.of("UTC")).getYear());
+        Rocket rocket1 = getRocket("rocket1", "Falcon");
+        Rocket rocket2 = getRocket("rocket2", "Apollo");
 
-        Launch launch1 = Launch.builder()
-                .date(Instant.now())
-                .launchPadId("pad1")
-                .rocketId("rocket1")
-                .build();
-
-        Launch launch2 = Launch.builder()
-                .date(Instant.parse("2023-01-21T05:47:26.853Z"))
-                .launchPadId("pad2")
-                .rocketId("rocket2")
-                .build();
-
-        Launch launch3 = Launch.builder()
-                .date(Instant.parse("2022-01-21T05:47:26.853Z"))
-                .launchPadId("pad2")
-                .rocketId("rocket2")
-                .build();
-
-        Rocket rocket1 = Rocket.builder()
-                .rocketId("rocket1")
-                .rocketName("Falcon")
-                .build();
-        Rocket rocket2 = Rocket.builder()
-                .rocketId("rocket2")
-                .rocketName("Apollo")
-                .build();
-
-        LaunchPad launchPad1 = LaunchPad.builder()
-                .launchPadName("Site 1")
-                .launchPadId("pad1")
-                .build();
-        LaunchPad launchPad2 = LaunchPad.builder()
-                .launchPadName("Site 2")
-                .launchPadId("pad2")
-                .build();
+        LaunchPad launchPad1 = getLaunchPad("pad1", "Site 1");
+        LaunchPad launchPad2 = getLaunchPad("pad2", "Site 2");
 
         given(spacexClientService.getAllLaunches()).willReturn(Flux.just(launch1, launch2, launch3));
         given(spacexClientService.getRocketById("rocket1")).willReturn(Mono.just(rocket1));
@@ -294,6 +195,28 @@ class TaskServiceTest {
         verify(spacexClientService, times(3)).getRocketById(any());
         verify(spacexClientService, times(3)).getLaunchPadById(any());
         verifyNoMoreInteractions(spacexClientService);
+    }
+
+    private static Launch getLaunch(Instant instant, String pad2, String rocket2) {
+        return Launch.builder()
+                .date(instant)
+                .launchPadId(pad2)
+                .rocketId(rocket2)
+                .build();
+    }
+
+    private Rocket getRocket(String rocketId, String rocketName) {
+        return Rocket.builder()
+                .rocketId(rocketId)
+                .rocketName(rocketName)
+                .build();
+    }
+
+    private LaunchPad getLaunchPad(String id, String name) {
+        return LaunchPad.builder()
+                .launchPadName(name)
+                .launchPadId(id)
+                .build();
     }
 
 }
